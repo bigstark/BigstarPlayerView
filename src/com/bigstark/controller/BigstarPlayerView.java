@@ -4,12 +4,33 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.VideoView;
 
 public class BigstarPlayerView extends FrameLayout {
 	
+	private int SCREEN_WIDTH = 0;
+	private int SCREEN_HEIGHT = 0;
+	private int VIDEO_HEIGHT_PORTRAIT = 0;
+	
+	private RelativeLayout layoutVideo;
 	private VideoView videoView;
+
+	private View layoutVideoController;
+	private ImageView ivPlayPause;
+	private TextView tvCurrentPosition;
+	private TextView tvDuration;
+	private ImageView ivFullscreen;
+	private SeekBar seekBar;
+
+	private MediaControllerHandler mediaControllerHandler;
+	private ControllerVisibleHandler controllerVisibleHandler;
 
 	public BigstarPlayerView(Context context) {
 		this(context, null);
@@ -21,6 +42,21 @@ public class BigstarPlayerView extends FrameLayout {
 
 	public BigstarPlayerView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		inflater.inflate(R.layout.bigstar_player_view, this);
+		init();
+	}
+
+	private void init() {
+		layoutVideo = (RelativeLayout) findViewById(R.id.layout_video);
+		videoView = (VideoView) findViewById(R.id.vv_video);
+		
+		layoutVideoController = findViewById(R.id.layout_controller);
+		ivPlayPause = (ImageView) findViewById(R.id.iv_play_pause);
+		tvCurrentPosition = (TextView) findViewById(R.id.tv_current_position);
+		tvDuration = (TextView) findViewById(R.id.tv_duration);
+		ivFullscreen = (ImageView) findViewById(R.id.iv_fullscreen);
+		seekBar = (SeekBar) findViewById(R.id.seek_bar_video);
 	}
 	
 	public VideoView getVideoView() {
@@ -45,7 +81,6 @@ public class BigstarPlayerView extends FrameLayout {
 			out.writeInt(this.stateToSave);
 		}
 
-		// required field that makes Parcelables from a Parcel
 		public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
 			public SavedState createFromParcel(Parcel in) {
 				return new SavedState(in);
