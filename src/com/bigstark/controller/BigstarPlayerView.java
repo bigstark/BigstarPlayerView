@@ -45,6 +45,7 @@ public class BigstarPlayerView extends FrameLayout {
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inflater.inflate(R.layout.bigstar_player_view, this);
 		init();
+		initHandlers();
 	}
 
 	private void init() {
@@ -59,8 +60,33 @@ public class BigstarPlayerView extends FrameLayout {
 		seekBar = (SeekBar) findViewById(R.id.seek_bar_video);
 	}
 	
+	private void initHandlers() {
+		mediaControllerHandler = new MediaControllerHandler(getContext(), this);
+		controllerVisibleHandler = new ControllerVisibleHandler(getContext(), layoutVideoController);
+	}
+	
 	public VideoView getVideoView() {
 		return videoView;
+	}
+	
+	protected ImageView getPlayPauseView() {
+		return ivPlayPause;
+	}
+	
+	protected TextView getCurrentPositionView() {
+		return tvCurrentPosition;
+	}
+	
+	protected TextView getDurationView() {
+		return tvDuration;
+	}
+	
+	protected ImageView getFullscreenView() {
+		return ivFullscreen;
+	}
+	
+	protected SeekBar getSeekBar() {
+		return seekBar;
 	}
 
 	static class SavedState extends BaseSavedState {

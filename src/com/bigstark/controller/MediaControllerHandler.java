@@ -1,5 +1,6 @@
 package com.bigstark.controller;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.ImageView;
@@ -18,21 +19,10 @@ class MediaControllerHandler extends Handler {
 	boolean isPlaying = false;
 	private int currentPosition = 0;
 	
-	public MediaControllerHandler(BigstarPlayerView videoPlayerView) {
+	public MediaControllerHandler(Context context, BigstarPlayerView videoPlayerView) {
 		this.videoView = videoPlayerView.getVideoView();
-		
-	}
-	
-	public void setCurrentPosition(TextView tvCurrentPosition) {
-		this.tvCurrentPosition = tvCurrentPosition;
-	}
-	
-	public void setSeekBar(SeekBar seekBar) {
-		this.seekBar = seekBar;
-	}
-	
-	public void setPlayPause(ImageView ivPlayPause) {
-		this.ivPlayPause = ivPlayPause;
+		this.tvCurrentPosition = videoPlayerView.getCurrentPositionView();
+		this.ivPlayPause = videoPlayerView.getPlayPauseView();
 	}
 
 	@Override
