@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -61,7 +62,6 @@ public class BigstarPlayerView extends FrameLayout {
 		ivFullscreen = (ImageView) findViewById(R.id.iv_fullscreen);
 		seekBar = (SeekBar) findViewById(R.id.seek_bar_video);
 		
-		layoutVideo.setOnClickListener(mLayoutClickListener);
 		ivPlayPause.setOnClickListener(mPlayPauseClickListener);
 		seekBar.setOnSeekBarChangeListener(mSeekChangeLinstener);
 	}
@@ -75,6 +75,7 @@ public class BigstarPlayerView extends FrameLayout {
 		layoutVideo = (RelativeLayout) findViewById(R.id.layout_video);
 		videoView = (VideoView) findViewById(R.id.vv_video);
 		
+		layoutVideo.setOnClickListener(mLayoutClickListener);
 		videoView.setOnPreparedListener(mPreparedListener);
 		videoView.setOnCompletionListener(mCompletionListener);
 	}
@@ -164,10 +165,10 @@ public class BigstarPlayerView extends FrameLayout {
 		public void onClick(View v) {
 			if(videoView == null) {
 				initVideo();
-			}
-			
-			if(videoUri != null) {
-				setVideoURI(videoUri);
+				
+				if(videoUri != null) {
+					setVideoURI(videoUri);
+				}
 			}
 			
 			if(controllerVisibleHandler.isVisibleController()) {
@@ -184,10 +185,10 @@ public class BigstarPlayerView extends FrameLayout {
 		public void onClick(View v) {
 			if(videoView == null) {
 				initVideo();
-			}
-			
-			if(videoUri != null) {
-				setVideoURI(videoUri);
+
+				if(videoUri != null) {
+					setVideoURI(videoUri);
+				}
 			}
 			
 			if(videoView.isPlaying()) {

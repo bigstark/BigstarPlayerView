@@ -23,6 +23,7 @@ class MediaControllerHandler extends Handler {
 		this.videoView = videoPlayerView.getVideoView();
 		this.tvCurrentPosition = videoPlayerView.getCurrentPositionView();
 		this.ivPlayPause = videoPlayerView.getPlayPauseView();
+		this.seekBar = videoPlayerView.getSeekBar();
 	}
 
 	@Override
