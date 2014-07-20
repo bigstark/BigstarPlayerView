@@ -61,7 +61,7 @@ class ControllerVisibleHandler extends Handler {
 		layoutVideoController.setVisibility(View.GONE);
 	}
 	
-	private boolean isVisibleController() {
+	public boolean isVisibleController() {
 		if(layoutVideoController == null) {
 			return false;
 		}

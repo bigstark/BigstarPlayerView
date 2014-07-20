@@ -16,7 +16,7 @@ class MediaControllerHandler extends Handler {
 	private SeekBar seekBar;
 	private ImageView ivPlayPause;
 	
-	boolean isPlaying = false;
+	private boolean isPlaying = false;
 	private int currentPosition = 0;
 	
 	public MediaControllerHandler(Context context, BigstarPlayerView videoPlayerView) {
@@ -71,7 +71,7 @@ class MediaControllerHandler extends Handler {
 		videoView.pause();
 		ivPlayPause.setImageResource(R.drawable.ic_play_circle);
 	}
-
+	
 	/**
 	 * @param second
 	 *  not millisecond
