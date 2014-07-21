@@ -1,4 +1,4 @@
-CustomVideoController
+BigstarPlayerView
 =====================
 
-Custom Video Controller
+Custom Video Controller by bigstark
