@@ -3,6 +3,7 @@ package com.bigstark.controller;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.content.res.TypedArray;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Parcel;
@@ -29,6 +30,15 @@ public class BigstarPlayerView extends FrameLayout {
 	
 	private Activity activity;
 	
+	private int toFullScreenIcon = R.drawable.icon_player_full_screen;
+	private int toBaseScreenIcon = R.drawable.icon_player_basic_screen;
+	private int playIcon = R.drawable.ic_play_circle;
+	private int pauseIcon = R.drawable.ic_pause_circle;
+	private int seekBarProgressDrawable = R.drawable.seekbar_progress;
+	private int seekBarThumb = R.drawable.seekbar_thumb;
+	private int currentPositionColor = 0xFFFFFFFF;
+	private int durationColor = 0xFFFFFFFF;
+	
 	private RelativeLayout layoutVideo;
 	private VideoView videoView;
 
@@ -38,12 +48,14 @@ public class BigstarPlayerView extends FrameLayout {
 	private TextView tvDuration;
 	private ImageView ivFullscreen;
 	private SeekBar seekBar;
-
+	
 	private MediaControllerHandler mediaControllerHandler;
 	private ControllerVisibleHandler controllerVisibleHandler;
 	
-	private boolean isFullscreen = false;
+	private boolean isFullScreen = false;
 	private Uri videoUri;
+	
+	private OnFullScreenListener fullScreenListener;
 	
 	public BigstarPlayerView(Context context) {
 		this(context, null);
@@ -57,6 +69,23 @@ public class BigstarPlayerView extends FrameLayout {
 		super(context, attrs, defStyle);
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inflater.inflate(R.layout.bigstar_player_view, this);
+		
+		final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.BigstarPlayerView, defStyle, 0);
+		
+		toFullScreenIcon = ta.getResourceId(R.styleable.BigstarPlayerView_toFullScreenIcon, toFullScreenIcon);
+		toBaseScreenIcon = ta.getResourceId(R.styleable.BigstarPlayerView_toBaseScreenIcon, toBaseScreenIcon);
+		playIcon = ta.getResourceId(R.styleable.BigstarPlayerView_playIcon, playIcon);
+		pauseIcon = ta.getResourceId(R.styleable.BigstarPlayerView_pauseIcon, pauseIcon);
+		seekBarProgressDrawable = ta.getResourceId(R.styleable.BigstarPlayerView_seekBarProgressDrawable, seekBarProgressDrawable);
+		seekBarThumb = ta.getResourceId(R.styleable.BigstarPlayerView_seekBarThumb, seekBarThumb);
+		currentPositionColor = ta.getColor(R.styleable.BigstarPlayerView_currentPositionColor, currentPositionColor);
+		durationColor = ta.getColor(R.styleable.BigstarPlayerView_durationColor, durationColor);
+		
+		ta.recycle();
+
+		init();
+		initVideo();
+		initHandlers();
 	}
 	
 	public void initialize(Activity activity) {
@@ -67,10 +96,6 @@ public class BigstarPlayerView extends FrameLayout {
 		
 		SCREEN_WIDTH = metrics.widthPixels;
 		SCREEN_HEIGHT = metrics.heightPixels;
-		
-		init();
-		initVideo();
-		initHandlers();
 	}
 
 	private void init() {
@@ -80,6 +105,13 @@ public class BigstarPlayerView extends FrameLayout {
 		tvDuration = (TextView) findViewById(R.id.tv_duration);
 		ivFullscreen = (ImageView) findViewById(R.id.iv_fullscreen);
 		seekBar = (SeekBar) findViewById(R.id.seek_bar_video);
+		
+		ivPlayPause.setImageResource(playIcon);
+		setCurrentPositionColor(currentPositionColor);
+		setDurationColor(durationColor);
+		ivFullscreen.setImageResource(toFullScreenIcon);
+		setSeekBarProgressDrawable(seekBarProgressDrawable);
+		setSeekBarThumb(seekBarThumb);
 		
 		ivPlayPause.setOnClickListener(mPlayPauseClickListener);
 		ivFullscreen.setOnClickListener(mFullscreenClickListener);
@@ -98,30 +130,6 @@ public class BigstarPlayerView extends FrameLayout {
 		layoutVideo.setOnClickListener(mLayoutClickListener);
 		videoView.setOnPreparedListener(mPreparedListener);
 		videoView.setOnCompletionListener(mCompletionListener);
-	}
-	
-	protected VideoView getVideoView() {
-		return videoView;
-	}
-	
-	protected ImageView getPlayPauseView() {
-		return ivPlayPause;
-	}
-	
-	protected TextView getCurrentPositionView() {
-		return tvCurrentPosition;
-	}
-	
-	protected TextView getDurationView() {
-		return tvDuration;
-	}
-	
-	protected ImageView getFullscreenView() {
-		return ivFullscreen;
-	}
-	
-	protected SeekBar getSeekBar() {
-		return seekBar;
 	}
 	
 	/**
@@ -213,9 +221,11 @@ public class BigstarPlayerView extends FrameLayout {
 			
 			if(videoView.isPlaying()) {
 				mediaControllerHandler.pause();
+				ivPlayPause.setImageResource(playIcon);
 				showController(false);
 			} else {
 				mediaControllerHandler.start();
+				ivPlayPause.setImageResource(pauseIcon);
 				showController();
 			}
 		}
@@ -233,8 +243,11 @@ public class BigstarPlayerView extends FrameLayout {
 				}
 			}
 			
-			isFullscreen = !isFullscreen;
-			doLayout(isFullscreen);
+			isFullScreen = !isFullScreen;
+			doLayout(isFullScreen);
+			if(fullScreenListener != null) {
+				fullScreenListener.onFullScreen(isFullScreen);
+			}
 		}
 		
 		private void doLayout(final boolean isFullScreen) {
@@ -247,12 +260,12 @@ public class BigstarPlayerView extends FrameLayout {
 				activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 				params.width = WindowManager.LayoutParams.MATCH_PARENT;
 				params.height= SCREEN_WIDTH;
-				ivFullscreen.setImageResource(R.drawable.icon_player_basic_screen);
+				ivFullscreen.setImageResource(toBaseScreenIcon);
 			} else {
 				activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 				params.width = SCREEN_WIDTH;
 				params.height = VIDEO_HEIGHT_PORTRAIT;
-				ivFullscreen.setImageResource(R.drawable.icon_player_full_screen);
+				ivFullscreen.setImageResource(toFullScreenIcon);
 			}
 			layoutVideo.setLayoutParams(params);
 			if(isPlaying) {
@@ -336,7 +349,6 @@ public class BigstarPlayerView extends FrameLayout {
 		return videoView.getCurrentPosition();
 	}
 	
-	
 	/**
 	 * @return it returns video current buffer percentage.
 	 */
@@ -347,7 +359,6 @@ public class BigstarPlayerView extends FrameLayout {
 		
 		return videoView.getBufferPercentage();
 	}
-	
 	
 	/**
 	 * Set video uri.
@@ -363,12 +374,83 @@ public class BigstarPlayerView extends FrameLayout {
 		videoView.setVideoURI(uri);
 	}
 	
-	
 	/**
 	 * @return it returns video ratio. ratio means height / width.
 	 */
 	public float getVideoRatio() {
 		return VIDEO_RATIO;
+	}
+	
+	protected VideoView getVideoView() {
+		return videoView;
+	}
+	
+	protected ImageView getPlayPauseView() {
+		return ivPlayPause;
+	}
+	
+	protected TextView getCurrentPositionView() {
+		return tvCurrentPosition;
+	}
+	
+	protected TextView getDurationView() {
+		return tvDuration;
+	}
+	
+	protected ImageView getFullscreenView() {
+		return ivFullscreen;
+	}
+	
+	protected SeekBar getSeekBar() {
+		return seekBar;
+	}
+	
+	public void setToFullScreenIcon(int resId) {
+		toFullScreenIcon = resId;
+	}
+	
+	public void setToBaseScreenIcon(int resId) {
+		toBaseScreenIcon = resId;
+	}
+	
+	public void setPlayIcon(int resId) {
+		playIcon = resId;
+	}
+	
+	public void setPauseIcon(int resId) {
+		pauseIcon = resId;
+	}
+	
+	public void setSeekBarProgressDrawable(int resId) {
+		seekBarProgressDrawable = resId;
+		seekBar.setProgressDrawable(getResources().getDrawable(resId));
+	}
+	
+	public void setSeekBarThumb(int resId) {
+		seekBarThumb = resId;
+		seekBar.setThumb(getResources().getDrawable(resId));
+	}
+	
+	public void setCurrentPositionColorResource(int colorResId) {
+		setCurrentPositionColor(getResources().getColor(colorResId));
+	}
+	
+	public void setCurrentPositionColor(int color) {
+		currentPositionColor = color;
+		tvCurrentPosition.setTextColor(color);
+	}
+	
+	public void setDurationColorResource(int colorResId) {
+		setDurationColor(getResources().getColor(colorResId));
+	}
+	
+	public void setDurationColor(int color) {
+		durationColor = color;
+		tvDuration.setTextColor(color);
+	}
+	
+	public void setOnFullScreenListener(OnFullScreenListener listener) {
+		fullScreenListener = listener;
 	}
 	
 	static class SavedState extends BaseSavedState {
@@ -400,4 +482,7 @@ public class BigstarPlayerView extends FrameLayout {
 		};
 	}
 
+	public interface OnFullScreenListener {
+		public void onFullScreen(boolean isFullScreen);
+	}
 }

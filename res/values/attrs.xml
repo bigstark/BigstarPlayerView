@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <declare-styleable name="BigstarPlayerView">
+        <attr name="toFullScreenIcon" format="reference" />
+        <attr name="toBaseScreenIcon" format="reference" />
+        <attr name="playIcon" format="reference" />
+        <attr name="pauseIcon" format="reference" />
+        <attr name="seekBarProgressDrawable" format="reference" />
+        <attr name="seekBarThumb" format="reference" />
+        <attr name="currentPositionColor" format="color" />
+        <attr name="durationColor" format="color" />
+    </declare-styleable>
+
+</resources>

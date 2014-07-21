@@ -3,7 +3,6 @@ package com.bigstark.controller;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -14,7 +13,6 @@ class MediaControllerHandler extends Handler {
 	
 	private TextView tvCurrentPosition;
 	private SeekBar seekBar;
-	private ImageView ivPlayPause;
 	
 	private boolean isPlaying = false;
 	private int currentPosition = 0;
@@ -22,7 +20,6 @@ class MediaControllerHandler extends Handler {
 	public MediaControllerHandler(Context context, BigstarPlayerView videoPlayerView) {
 		this.videoView = videoPlayerView.getVideoView();
 		this.tvCurrentPosition = videoPlayerView.getCurrentPositionView();
-		this.ivPlayPause = videoPlayerView.getPlayPauseView();
 		this.seekBar = videoPlayerView.getSeekBar();
 	}
 
@@ -59,7 +56,6 @@ class MediaControllerHandler extends Handler {
 
 		isPlaying = true;
 		videoView.start();
-		ivPlayPause.setImageResource(R.drawable.ic_pause_circle);
 		sendEmptyMessage(0);
 	}
 
@@ -70,7 +66,6 @@ class MediaControllerHandler extends Handler {
 
 		isPlaying = false;
 		videoView.pause();
-		ivPlayPause.setImageResource(R.drawable.ic_play_circle);
 	}
 	
 	/**
