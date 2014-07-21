@@ -1,16 +1,19 @@
 package com.bigstark.controller;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -18,9 +21,13 @@ import android.widget.VideoView;
 
 public class BigstarPlayerView extends FrameLayout {
 	
-	private int SCREEN_WIDTH = 0;
-	private int SCREEN_HEIGHT = 0;
-	private int VIDEO_HEIGHT_PORTRAIT = 0;
+	private float VIDEO_RATIO = 0;
+	
+	private int SCREEN_WIDTH;
+	private int SCREEN_HEIGHT;
+	private int VIDEO_HEIGHT_PORTRAIT;
+	
+	private Activity activity;
 	
 	private RelativeLayout layoutVideo;
 	private VideoView videoView;
@@ -35,8 +42,9 @@ public class BigstarPlayerView extends FrameLayout {
 	private MediaControllerHandler mediaControllerHandler;
 	private ControllerVisibleHandler controllerVisibleHandler;
 	
+	private boolean isFullscreen = false;
 	private Uri videoUri;
-
+	
 	public BigstarPlayerView(Context context) {
 		this(context, null);
 	}
@@ -49,6 +57,17 @@ public class BigstarPlayerView extends FrameLayout {
 		super(context, attrs, defStyle);
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inflater.inflate(R.layout.bigstar_player_view, this);
+	}
+	
+	public void initialize(Activity activity) {
+		this.activity = activity;
+		
+		DisplayMetrics metrics = new DisplayMetrics();
+		activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		
+		SCREEN_WIDTH = metrics.widthPixels;
+		SCREEN_HEIGHT = metrics.heightPixels;
+		
 		init();
 		initVideo();
 		initHandlers();
@@ -63,6 +82,7 @@ public class BigstarPlayerView extends FrameLayout {
 		seekBar = (SeekBar) findViewById(R.id.seek_bar_video);
 		
 		ivPlayPause.setOnClickListener(mPlayPauseClickListener);
+		ivFullscreen.setOnClickListener(mFullscreenClickListener);
 		seekBar.setOnSeekBarChangeListener(mSeekChangeLinstener);
 	}
 	
@@ -201,6 +221,46 @@ public class BigstarPlayerView extends FrameLayout {
 		}
 	};
 	
+	private View.OnClickListener mFullscreenClickListener = new View.OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			if(videoView == null) {
+				initVideo();
+
+				if(videoUri != null) {
+					setVideoURI(videoUri);
+				}
+			}
+			
+			isFullscreen = !isFullscreen;
+			doLayout(isFullscreen);
+		}
+		
+		private void doLayout(final boolean isFullScreen) {
+			boolean isPlaying = videoView.isPlaying();
+			mediaControllerHandler.pause();
+			activity.setRequestedOrientation(isFullScreen ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
+			
+			if(isFullScreen) {
+				activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+				params.width = WindowManager.LayoutParams.MATCH_PARENT;
+				params.height= SCREEN_WIDTH;
+				ivFullscreen.setImageResource(R.drawable.icon_player_basic_screen);
+			} else {
+				activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+				params.width = SCREEN_WIDTH;
+				params.height = VIDEO_HEIGHT_PORTRAIT;
+				ivFullscreen.setImageResource(R.drawable.icon_player_full_screen);
+			}
+			layoutVideo.setLayoutParams(params);
+			if(isPlaying) {
+				mediaControllerHandler.start();
+			}
+		}
+	};
+	
 	private SeekBar.OnSeekBarChangeListener mSeekChangeLinstener = new SeekBar.OnSeekBarChangeListener() {
 		
 		@Override
@@ -235,6 +295,9 @@ public class BigstarPlayerView extends FrameLayout {
 		
 		@Override
 		public void onPrepared(MediaPlayer mp) {
+			VIDEO_RATIO = ((float) ((float) mp.getVideoHeight()) / ((float) mp.getVideoWidth()));
+			VIDEO_HEIGHT_PORTRAIT = (int) (((float) SCREEN_WIDTH) * VIDEO_RATIO);
+			
 			int duration = mp.getDuration() / 1000;
 			
 			int minute = duration / 60;
@@ -258,6 +321,25 @@ public class BigstarPlayerView extends FrameLayout {
 		}
 	};
 	
+	/**
+	 * @return it returns video whole times. it's not millisecond
+	 */
+	public int getDuration() {
+		return videoView.getDuration();
+	}
+
+	/**
+	 * 
+	 * @return it returns video current time. it's not millisecond
+	 */
+	public int getCurrentPosition() {
+		return videoView.getCurrentPosition();
+	}
+	
+	
+	/**
+	 * @return it returns video current buffer percentage.
+	 */
 	public int getBufferPercentage() {
 		if(videoView == null) {
 			return 0;
@@ -266,6 +348,11 @@ public class BigstarPlayerView extends FrameLayout {
 		return videoView.getBufferPercentage();
 	}
 	
+	
+	/**
+	 * Set video uri.
+	 * @param uri : Video uri can be file, streaming etc...
+	 */
 	public void setVideoURI(Uri uri) {
 		this.videoUri = uri;
 		
@@ -276,8 +363,12 @@ public class BigstarPlayerView extends FrameLayout {
 		videoView.setVideoURI(uri);
 	}
 	
-	protected void setFullScreenClickListener(View.OnClickListener listener) {
-		ivFullscreen.setOnClickListener(listener);
+	
+	/**
+	 * @return it returns video ratio. ratio means height / width.
+	 */
+	public float getVideoRatio() {
+		return VIDEO_RATIO;
 	}
 	
 	static class SavedState extends BaseSavedState {

@@ -10,16 +10,14 @@
         <RelativeLayout
             android:id="@+id/layout_video"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:background="@android:color/black" >
 
             <VideoView
                 android:id="@+id/vv_video"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentTop="true" />
+                android:layout_centerInParent="true" />
         </RelativeLayout>
 
         <RelativeLayout
