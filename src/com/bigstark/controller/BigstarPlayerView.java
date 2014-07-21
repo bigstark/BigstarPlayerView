@@ -56,6 +56,7 @@ public class BigstarPlayerView extends FrameLayout {
 	private Uri videoUri;
 	
 	private OnFullScreenListener fullScreenListener;
+	private OnPrepareCompleteListener prepareCompleteListener;
 	
 	public BigstarPlayerView(Context context) {
 		this(context, null);
@@ -137,6 +138,7 @@ public class BigstarPlayerView extends FrameLayout {
 	 */
 	public void start() {
 		mediaControllerHandler.start();
+		ivPlayPause.setImageResource(pauseIcon);
 		showController();
 	}
 
@@ -145,6 +147,7 @@ public class BigstarPlayerView extends FrameLayout {
 	 */
 	public void pause() {
 		mediaControllerHandler.pause();
+		ivPlayPause.setImageResource(playIcon);
 		showController(false);
 	}
 
@@ -243,36 +246,37 @@ public class BigstarPlayerView extends FrameLayout {
 				}
 			}
 			
-			isFullScreen = !isFullScreen;
-			doLayout(isFullScreen);
+			doLayout(!isFullScreen);
 			if(fullScreenListener != null) {
 				fullScreenListener.onFullScreen(isFullScreen);
 			}
 		}
 		
-		private void doLayout(final boolean isFullScreen) {
-			boolean isPlaying = videoView.isPlaying();
-			mediaControllerHandler.pause();
-			activity.setRequestedOrientation(isFullScreen ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
-			
-			if(isFullScreen) {
-				activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-				params.width = WindowManager.LayoutParams.MATCH_PARENT;
-				params.height= SCREEN_WIDTH;
-				ivFullscreen.setImageResource(toBaseScreenIcon);
-			} else {
-				activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-				params.width = SCREEN_WIDTH;
-				params.height = VIDEO_HEIGHT_PORTRAIT;
-				ivFullscreen.setImageResource(toFullScreenIcon);
-			}
-			layoutVideo.setLayoutParams(params);
-			if(isPlaying) {
-				mediaControllerHandler.start();
-			}
-		}
 	};
+
+	private void doLayout(final boolean isFullScreen) {
+		this.isFullScreen = isFullScreen;
+		boolean isPlaying = videoView.isPlaying();
+		mediaControllerHandler.pause();
+		activity.setRequestedOrientation(isFullScreen ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
+		
+		if(isFullScreen) {
+			activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			params.width = WindowManager.LayoutParams.MATCH_PARENT;
+			params.height= SCREEN_WIDTH;
+			ivFullscreen.setImageResource(toBaseScreenIcon);
+		} else {
+			activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			params.width = SCREEN_WIDTH;
+			params.height = VIDEO_HEIGHT_PORTRAIT;
+			ivFullscreen.setImageResource(toFullScreenIcon);
+		}
+		layoutVideo.setLayoutParams(params);
+		if(isPlaying) {
+			mediaControllerHandler.start();
+		}
+	}
 	
 	private SeekBar.OnSeekBarChangeListener mSeekChangeLinstener = new SeekBar.OnSeekBarChangeListener() {
 		
@@ -323,6 +327,11 @@ public class BigstarPlayerView extends FrameLayout {
 			tvDuration.setText("" + sb.toString());
 			
 			seekBar.setMax(duration);
+			doLayout(false);
+			
+			if(prepareCompleteListener != null) {
+				prepareCompleteListener.onPrepareComplete();
+			}
 		}
 	};
 	
@@ -379,6 +388,21 @@ public class BigstarPlayerView extends FrameLayout {
 	 */
 	public float getVideoRatio() {
 		return VIDEO_RATIO;
+	}
+	
+	/**
+	 * setFullScreen
+	 * @param isFullScreen
+	 */
+	public void setFullScreen(boolean isFullScreen) {
+		doLayout(isFullScreen);
+	}
+	
+	public boolean isPlaying() {
+		if(videoView == null) {
+			return false;
+		}
+		return videoView.isPlaying();
 	}
 	
 	protected VideoView getVideoView() {
@@ -453,6 +477,16 @@ public class BigstarPlayerView extends FrameLayout {
 		fullScreenListener = listener;
 	}
 	
+	public void setOnPrepareCompleteListener(OnPrepareCompleteListener listener) {
+		prepareCompleteListener = listener;
+	}
+	
+	public void setVideoHeight(int height) {
+		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutVideo.getLayoutParams();
+		params.height = height;
+		layoutVideo.setLayoutParams(params);
+	}
+	
 	static class SavedState extends BaseSavedState {
 		int stateToSave;
 
@@ -484,5 +518,9 @@ public class BigstarPlayerView extends FrameLayout {
 
 	public interface OnFullScreenListener {
 		public void onFullScreen(boolean isFullScreen);
+	}
+	
+	public interface OnPrepareCompleteListener {
+		public void onPrepareComplete();
 	}
 }
