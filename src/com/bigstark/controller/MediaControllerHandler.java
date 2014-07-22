@@ -76,6 +76,7 @@ class MediaControllerHandler extends Handler {
 		if (videoView == null) {
 			return;
 		}
+		
 		videoView.seekTo(second * 1000);
 	}
 

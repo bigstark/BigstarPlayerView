@@ -10,6 +10,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -27,6 +28,7 @@ public class BigstarPlayerView extends FrameLayout {
 	private int SCREEN_WIDTH;
 	private int SCREEN_HEIGHT;
 	private int VIDEO_HEIGHT_PORTRAIT;
+	private int LAYOUT_HEIGHT = 0;
 	
 	private Activity activity;
 	
@@ -54,7 +56,7 @@ public class BigstarPlayerView extends FrameLayout {
 	
 	private boolean isFullScreen = false;
 	private Uri videoUri;
-	
+
 	private OnFullScreenListener fullScreenListener;
 	private OnPrepareCompleteListener prepareCompleteListener;
 	
@@ -227,6 +229,10 @@ public class BigstarPlayerView extends FrameLayout {
 				ivPlayPause.setImageResource(playIcon);
 				showController(false);
 			} else {
+				if(videoView.getCurrentPosition() == videoView.getDuration()) {
+					videoView.seekTo(0);
+				}
+				
 				mediaControllerHandler.start();
 				ivPlayPause.setImageResource(pauseIcon);
 				showController();
@@ -269,7 +275,11 @@ public class BigstarPlayerView extends FrameLayout {
 		} else {
 			activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			params.width = SCREEN_WIDTH;
-			params.height = VIDEO_HEIGHT_PORTRAIT;
+			if(LAYOUT_HEIGHT != 0) {
+				params.height = LAYOUT_HEIGHT;
+			} else {
+				params.height = VIDEO_HEIGHT_PORTRAIT;
+			}
 			ivFullscreen.setImageResource(toFullScreenIcon);
 		}
 		layoutVideo.setLayoutParams(params);
@@ -298,10 +308,10 @@ public class BigstarPlayerView extends FrameLayout {
 			
 			if(videoView == null) {
 				initVideo();
-			}
-			
-			if(videoUri != null) {
-				setVideoURI(videoUri);
+				if(videoUri != null) {
+					setVideoURI(videoUri);
+				}
+				
 			}
 			
 			mediaControllerHandler.seekTo(progress);
@@ -327,11 +337,13 @@ public class BigstarPlayerView extends FrameLayout {
 			tvDuration.setText("" + sb.toString());
 			
 			seekBar.setMax(duration);
-			doLayout(false);
+			doLayout(isFullScreen);
 			
 			if(prepareCompleteListener != null) {
 				prepareCompleteListener.onPrepareComplete();
 			}
+			
+			Log.v("TAG", "video current position : " + mp.getCurrentPosition());
 		}
 	};
 	
@@ -339,7 +351,9 @@ public class BigstarPlayerView extends FrameLayout {
 		
 		@Override
 		public void onCompletion(MediaPlayer mp) {
-			
+			mediaControllerHandler.pause();
+			ivPlayPause.setImageResource(playIcon);
+			controllerVisibleHandler.showController(false);
 		}
 	};
 	
@@ -355,7 +369,7 @@ public class BigstarPlayerView extends FrameLayout {
 	 * @return it returns video current time. it's not millisecond
 	 */
 	public int getCurrentPosition() {
-		return videoView.getCurrentPosition();
+		return mediaControllerHandler.getCurrentPosition();
 	}
 	
 	/**
@@ -396,6 +410,9 @@ public class BigstarPlayerView extends FrameLayout {
 	 */
 	public void setFullScreen(boolean isFullScreen) {
 		doLayout(isFullScreen);
+		if(fullScreenListener != null) {
+			fullScreenListener.onFullScreen(isFullScreen);
+		}
 	}
 	
 	public boolean isPlaying() {
@@ -482,6 +499,8 @@ public class BigstarPlayerView extends FrameLayout {
 	}
 	
 	public void setVideoHeight(int height) {
+		LAYOUT_HEIGHT = height;
+
 		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutVideo.getLayoutParams();
 		params.height = height;
 		layoutVideo.setLayoutParams(params);
