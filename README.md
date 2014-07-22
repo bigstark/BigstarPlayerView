@@ -41,6 +41,8 @@ bigstark:toFullScreenIcon="@drawable/icon_player_full_screen"
 
 also please add `xmlns:bigstark="http://schemas.android.com/apk/res-auto"`
 
+#Must
+For FullScreen, you must add `android:configChanges="keyboard|keyboardHidden|orientation|screenSize"` on Activity in AndroidManifest
 
 ###Java
 After `BigstarPlayerView bpvMain = (BigstarPlayerView) findViewById(R.id.bpv_video)`
