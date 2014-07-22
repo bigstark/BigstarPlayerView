@@ -1,4 +1,4 @@
-###BigstarPlayerView
+#BigstarPlayerView
 
 It helps you play video more comfortable, pretty and useful.
 
@@ -11,11 +11,11 @@ Clone this repository
 Import BigstarPlayerView on Eclipse in your workspace
 
 
-#Usage
+###Usage
 You cau use it on xml or java.
 
 
-#XML
+###XML
 ```xml
 <com.bigstark.controller.BigstarPlayerView
         android:id="@+id/bpv_video"
@@ -23,7 +23,7 @@ You cau use it on xml or java.
         android:layout_height="wrap_content" />
 ```
 
-#Custom Setting
+###Custom Setting
 - Play/Pause Icons
 - seekBarProgressDrawable
 - seekBarThumb
@@ -42,7 +42,7 @@ bigstark:toFullScreenIcon="@drawable/icon_player_full_screen"
 also please add `xmlns:bigstark="http://schemas.android.com/apk/res-auto"`
 
 
-#Java
+###Java
 After `BigstarPlayerView bpvMain = (BigstarPlayerView) findViewById(R.id.bpv_video)`
 
 You must intialize like this.
