@@ -51,5 +51,11 @@ You must intialize like this.
 
 you must set `bpvMain.setVideoURI(uri)` before `bpvMain.start()`
 
+if you want to seek to specific position, you can use `bpvMain.seekTo(second)`
+also you can stop video as `bpvMain.pause()`
+
+if you want to fix video height, you can use `bpvMain.setVideoHeight(height)`
+
+if you want to kwow video ratio, you can use `bpvMain.getVideoRatio()`
 
 
