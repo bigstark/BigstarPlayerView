@@ -10,6 +10,7 @@ apply plugin: 'android'
 
 repositories {
     mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/groups/public' }
 }
 
 android {
@@ -44,5 +45,6 @@ android {
 }
 
 dependencies {
-    compile project(':BigstarPlayerView')
+//    compile project(':BigstarPlayerView')
+    compile 'com.github.daekyu.bigstarplayerview:library:0.1.0-SNAPSHOT'
 }
