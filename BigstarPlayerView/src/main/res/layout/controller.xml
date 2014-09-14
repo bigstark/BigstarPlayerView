@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content">
+
+  <com.bigstark.controller.ScaleImageView
+    android:id="@+id/iv_play_pause"
+    android:layout_width="60dp"
+    android:layout_height="wrap_content"
+    android:layout_centerInParent="true"
+    android:src="@drawable/ic_play_circle"/>
+
+  <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:paddingBottom="7dp"
+    android:paddingLeft="10dp">
+
+    <TextView
+      android:id="@+id/tv_current_position"
+      android:layout_width="30dp"
+      android:layout_height="wrap_content"
+      android:layout_centerVertical="true"
+      android:background="@android:color/transparent"
+      android:text="0:00"
+      android:textColor="@android:color/white"
+      android:textSize="14sp"/>
+
+    <com.bigstark.controller.ScaleImageView
+      android:id="@+id/iv_fullscreen"
+      android:layout_width="30dp"
+      android:layout_height="wrap_content"
+      android:layout_alignParentRight="true"
+      android:layout_centerVertical="true"
+      android:src="@drawable/icon_player_full_screen"/>
+
+    <TextView
+      android:id="@+id/tv_duration"
+      android:layout_width="30dp"
+      android:layout_height="wrap_content"
+      android:layout_centerVertical="true"
+      android:layout_marginRight="5dp"
+      android:layout_toLeftOf="@id/iv_fullscreen"
+      android:background="@android:color/transparent"
+      android:text="0:00"
+      android:textColor="@android:color/white"
+      android:textSize="14sp"/>
+
+    <SeekBar
+      android:id="@+id/seek_bar_video"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_centerVertical="true"
+      android:layout_toLeftOf="@id/tv_duration"
+      android:layout_toRightOf="@id/tv_current_position"
+      android:progressDrawable="@drawable/seekbar_progress"
+      android:thumb="@drawable/seekbar_thumb"/>
+  </RelativeLayout>
+
+</RelativeLayout>
