@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- Seekbar progress color -->
-    <color name="progress_background">#77CCCCCC</color>
-    <color name="progress_secondary">#77CCCCCC</color>
-    <color name="progress">#F48B00</color>
-
-</resources>
