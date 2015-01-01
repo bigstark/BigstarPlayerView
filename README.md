@@ -6,9 +6,8 @@ It helps you play video more comfortable, pretty and useful.
 ##Include your project
 Clone this repository
 
-`git clone https://github.com/Daekyu/BigstarPlayerView.git BigstarPlayerView`
+`compile 'com.github.daekyu.bigstarplayerview:library:0.1.0-SNAPSHOT@aar'`
 
-Import BigstarPlayerView on Eclipse in your workspace
 
 
 ###Usage
