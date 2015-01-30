@@ -59,6 +59,7 @@ public class BigstarPlayerView extends FrameLayout {
 
   private OnFullScreenListener fullScreenListener;
   private OnPrepareCompleteListener prepareCompleteListener;
+  private OnPlayerErrorListener playerErrorListener;
 
   public BigstarPlayerView(Context context) {
     this(context, null);
@@ -133,6 +134,7 @@ public class BigstarPlayerView extends FrameLayout {
     layoutVideo.setOnClickListener(mLayoutClickListener);
     videoView.setOnPreparedListener(mPreparedListener);
     videoView.setOnCompletionListener(mCompletionListener);
+    videoView.setOnErrorListener(mPlayerErrorListener);
   }
 
   /**
@@ -361,6 +363,16 @@ public class BigstarPlayerView extends FrameLayout {
     }
   };
 
+  private MediaPlayer.OnErrorListener mPlayerErrorListener = new MediaPlayer.OnErrorListener() {
+    @Override
+    public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
+      if (playerErrorListener != null) {
+        playerErrorListener.onPlayerError(what, extra);
+      }
+      return true;
+    }
+  };
+
   /**
    * @return it returns video whole times. it's not millisecond
    */
@@ -503,6 +515,10 @@ public class BigstarPlayerView extends FrameLayout {
     prepareCompleteListener = listener;
   }
 
+  public void setOnPlayerErrorListener(OnPlayerErrorListener listener) {
+    playerErrorListener = listener;
+  }
+
   public void setVideoHeight(int height) {
     LAYOUT_HEIGHT = height;
 
@@ -546,5 +562,9 @@ public class BigstarPlayerView extends FrameLayout {
 
   public interface OnPrepareCompleteListener {
     public void onPrepareComplete();
+  }
+
+  public interface OnPlayerErrorListener {
+    public void onPlayerError(int what, int extra);
   }
 }
