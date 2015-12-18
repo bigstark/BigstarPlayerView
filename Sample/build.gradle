@@ -1,50 +1,30 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:0.9.+'
-    }
-}
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 repositories {
-    mavenCentral()
-    maven { url 'https://oss.sonatype.org/content/groups/public' }
+    maven { url "https://jitpack.io" }
+    jcenter()
 }
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "20.0.0"
+    compileSdkVersion ANDROID_BUILD_SDK_VERSION as Integer
+    buildToolsVersion ANDROID_BUILD_TOOLS_VERSION as String
 
     defaultConfig {
-        minSdkVersion 11
-        targetSdkVersion 19
+        applicationId "com.bigstark.controller.sample"
+        minSdkVersion ANDROID_BUILD_MIN_SDK_VERSION as Integer
+        targetSdkVersion ANDROID_BUILD_TARGET_SDK_VERSION as Integer
         versionCode 1
         versionName "1.0"
     }
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES.txt'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'AndroidManifest.xml'
     }
 }
 
 dependencies {
 //    compile project(':BigstarPlayerView')
-    compile 'com.github.daekyu.bigstarplayerview:library:0.1.0-SNAPSHOT'
+    compile 'com.github.bigstark:BigstarPlayerView:0.1'
 }
