@@ -8,9 +8,9 @@ android {
     defaultConfig {
         minSdkVersion project.ANDROID_BUILD_MIN_SDK_VERSION as Integer
         targetSdkVersion project.ANDROID_BUILD_SDK_VERSION as Integer
-        versionCode 1
-        versionName "0.1"
-        group='com.github.bigstark'
+        versionCode project.VERSION_CODE as Integer
+        versionName project.VERSION_NAME as String
+        group = project.GROUP as String
     }
 }
 
