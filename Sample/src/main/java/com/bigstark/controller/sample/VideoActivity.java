@@ -14,7 +14,7 @@ import com.bigstark.controller.player.BigstarVideoView;
  * Created by bigstark on 15. 12. 21..
  */
 public class VideoActivity extends Activity {
-  private static final String SAMPLE_URL = "http://api.wecandeo.com/video/default/BOKNS9AQWrFSTupSbNE3M60gpF3OhwV3yyzlOMrMC7eistTjDgbxwEIMOwkBTzaHcoOViiNisKuiiEwsGmlVaxo7l8JteyHOb4J7WZHhNSvMRcoie";
+  private static final String SAMPLE_URL = "SAMPLE";
 
   private ViewGroup container;
   private BigstarVideoView videoView;
