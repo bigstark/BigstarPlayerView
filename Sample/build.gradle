@@ -26,5 +26,5 @@ android {
 
 dependencies {
     compile project(':BigstarPlayerView')
-//    compile 'com.github.bigstark:BigstarPlayerView:0.2'
+//    compile 'com.github.bigstark:BigstarPlayerView:1.0'
 }
