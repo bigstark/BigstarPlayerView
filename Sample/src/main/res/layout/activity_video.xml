@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/layout_container"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+  <com.bigstark.controller.player.BigstarVideoView
+    android:id="@+id/bigstar_video_view"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    />
+
+  <Button
+    android:id="@+id/btn_appear"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="appear"
+    />
+
+  <Button
+    android:id="@+id/btn_disappear"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="disappear"
+    />
+
+</LinearLayout>

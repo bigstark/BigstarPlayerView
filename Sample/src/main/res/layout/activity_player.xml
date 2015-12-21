@@ -1,13 +1,14 @@
 <RelativeLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
-  android:layout_height="match_parent">
+  android:layout_height="match_parent"
+  >
 
   <com.bigstark.controller.BigstarPlayerView
     android:id="@+id/bigstar_player_view"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" />
+    android:layout_height="wrap_content"
+    />
 
 
 </RelativeLayout>

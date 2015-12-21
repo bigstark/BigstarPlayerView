@@ -7,7 +7,7 @@ import android.util.DisplayMetrics;
 import com.bigstark.controller.BigstarPlayerView;
 
 
-public class MainActivity extends Activity {
+public class PlayerActivity extends Activity {
   private final float VIDEO_RATIO = (float) 9 / (float) 16;
   private final String KEY_CURRENT_POSITION = "CurrentPosition";
 
@@ -16,11 +16,10 @@ public class MainActivity extends Activity {
 
   private BigstarPlayerView playerView;
 
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_main);
+    setContentView(R.layout.activity_player);
     initVideo();
 
     if(savedInstanceState != null) {
@@ -43,7 +42,7 @@ public class MainActivity extends Activity {
 
       @Override
       public void onFullScreen(boolean isFullScreen) {
-        MainActivity.this.isFullScreen = isFullScreen;
+        PlayerActivity.this.isFullScreen = isFullScreen;
       }
     });
     playerView.setOnPrepareCompleteListener(new BigstarPlayerView.OnPrepareCompleteListener() {
