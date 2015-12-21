@@ -8,6 +8,8 @@ import com.bigstark.controller.BigstarPlayerView;
 
 
 public class PlayerActivity extends Activity {
+  private static final String SAMPLE_URL = "http://api.wecandeo.com/video/default/BOKNS9AQWrFSTupSbNE3M60gpF3OhwV3yyzlOMrMC7eistTjDgbxwEIMOwkBTzaHcoOViiNisKuiiEwsGmlVaxo7l8JteyHOb4J7WZHhNSvMRcoie";
+
   private final float VIDEO_RATIO = (float) 9 / (float) 16;
   private final String KEY_CURRENT_POSITION = "CurrentPosition";
 
@@ -56,7 +58,7 @@ public class PlayerActivity extends Activity {
       }
     });
 
-    Uri vidUri = Uri.parse("video uri");
+    Uri vidUri = Uri.parse(SAMPLE_URL);
     playerView.setVideoURI(vidUri);
   }
 

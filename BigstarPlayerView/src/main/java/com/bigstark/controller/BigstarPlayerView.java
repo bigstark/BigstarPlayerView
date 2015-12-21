@@ -19,7 +19,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.VideoView;
+
+import com.bigstark.controller.player.BigstarVideoView;
 
 public class BigstarPlayerView extends FrameLayout {
 
@@ -42,7 +43,7 @@ public class BigstarPlayerView extends FrameLayout {
   private int durationColor = 0xFFFFFFFF;
 
   private RelativeLayout layoutVideo;
-  private VideoView videoView;
+  private BigstarVideoView videoView;
 
   private View layoutVideoController;
   private ImageView ivPlayPause;
@@ -51,7 +52,6 @@ public class BigstarPlayerView extends FrameLayout {
   private ImageView ivFullscreen;
   private SeekBar seekBar;
 
-  private MediaControllerHandler mediaControllerHandler;
   private ControllerVisibleHandler controllerVisibleHandler;
 
   private boolean isFullScreen = false;
@@ -60,6 +60,7 @@ public class BigstarPlayerView extends FrameLayout {
   private OnFullScreenListener fullScreenListener;
   private OnPrepareCompleteListener prepareCompleteListener;
   private OnPlayerErrorListener playerErrorListener;
+  private BigstarVideoView.OnPositionChangedListener mPositionChangedListener;
 
   public BigstarPlayerView(Context context) {
     this(context, null);
@@ -123,25 +124,40 @@ public class BigstarPlayerView extends FrameLayout {
   }
 
   private void initHandlers() {
-    mediaControllerHandler = new MediaControllerHandler(getContext(), this);
-    controllerVisibleHandler = new ControllerVisibleHandler(getContext(), layoutVideoController);
+    controllerVisibleHandler = new ControllerVisibleHandler(layoutVideoController);
   }
 
   private void initVideo() {
     layoutVideo = (RelativeLayout) findViewById(R.id.layout_video);
-    videoView = (VideoView) findViewById(R.id.vv_video);
+    videoView = (BigstarVideoView) findViewById(R.id.bvv_video);
 
     layoutVideo.setOnClickListener(mLayoutClickListener);
     videoView.setOnPreparedListener(mPreparedListener);
     videoView.setOnCompletionListener(mCompletionListener);
     videoView.setOnErrorListener(mPlayerErrorListener);
+    videoView.setOnPositionChangedListener(new BigstarVideoView.OnPositionChangedListener() {
+      @Override
+      public void onPositionChanged(int position) {
+        int currentPosition = position / 1000;
+
+        int minute = currentPosition / 60;
+        int second = currentPosition - (minute * 60);
+
+        tvCurrentPosition.setText(String.format("%d:%02d", minute, second));
+        seekBar.setProgress(currentPosition);
+
+        if (mPositionChangedListener != null) {
+          mPositionChangedListener.onPositionChanged(position);
+        }
+      }
+    });
   }
 
   /**
    * Start video play
    */
   public void start() {
-    mediaControllerHandler.start();
+    videoView.start();
     ivPlayPause.setImageResource(pauseIcon);
     showController();
   }
@@ -150,7 +166,7 @@ public class BigstarPlayerView extends FrameLayout {
    * Video pause
    */
   public void pause() {
-    mediaControllerHandler.pause();
+    videoView.pause();
     ivPlayPause.setImageResource(playIcon);
     showController(false);
   }
@@ -161,7 +177,8 @@ public class BigstarPlayerView extends FrameLayout {
    * @param second : not millisecond.
    */
   public void seekTo(int second) {
-    mediaControllerHandler.seekTo(second);
+    videoView.seekTo(second);
+
     showController();
   }
 
@@ -231,7 +248,7 @@ public class BigstarPlayerView extends FrameLayout {
       }
 
       if (videoView.isPlaying()) {
-        mediaControllerHandler.pause();
+        videoView.pause();
         ivPlayPause.setImageResource(playIcon);
         showController(false);
       } else {
@@ -239,7 +256,7 @@ public class BigstarPlayerView extends FrameLayout {
           videoView.seekTo(0);
         }
 
-        mediaControllerHandler.start();
+        videoView.start();
         ivPlayPause.setImageResource(pauseIcon);
         showController();
       }
@@ -269,7 +286,7 @@ public class BigstarPlayerView extends FrameLayout {
   private void doLayout(final boolean isFullScreen) {
     this.isFullScreen = isFullScreen;
     boolean isPlaying = videoView.isPlaying();
-    mediaControllerHandler.pause();
+    videoView.pause();
     activity.setRequestedOrientation(isFullScreen ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
 
@@ -290,7 +307,7 @@ public class BigstarPlayerView extends FrameLayout {
     }
     layoutVideo.setLayoutParams(params);
     if (isPlaying) {
-      mediaControllerHandler.start();
+      videoView.start();
     }
   }
 
@@ -317,10 +334,9 @@ public class BigstarPlayerView extends FrameLayout {
         if (videoUri != null) {
           setVideoURI(videoUri);
         }
-
       }
 
-      mediaControllerHandler.seekTo(progress);
+      videoView.seekTo(progress * 1000);
     }
   };
 
@@ -357,7 +373,7 @@ public class BigstarPlayerView extends FrameLayout {
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-      mediaControllerHandler.pause();
+      videoView.pause();
       ivPlayPause.setImageResource(playIcon);
       controllerVisibleHandler.showController(false);
     }
@@ -384,18 +400,7 @@ public class BigstarPlayerView extends FrameLayout {
    * @return it returns video current time. it's not millisecond
    */
   public int getCurrentPosition() {
-    return mediaControllerHandler.getCurrentPosition();
-  }
-
-  /**
-   * @return it returns video current buffer percentage.
-   */
-  public int getBufferPercentage() {
-    if (videoView == null) {
-      return 0;
-    }
-
-    return videoView.getBufferPercentage();
+    return videoView.getCurrentPosition();
   }
 
   /**
@@ -439,7 +444,7 @@ public class BigstarPlayerView extends FrameLayout {
     return videoView.isPlaying();
   }
 
-  protected VideoView getVideoView() {
+  protected BigstarVideoView getVideoView() {
     return videoView;
   }
 

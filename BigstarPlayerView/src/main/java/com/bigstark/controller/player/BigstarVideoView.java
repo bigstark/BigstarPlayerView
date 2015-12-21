@@ -17,6 +17,14 @@ import java.io.IOException;
 public class BigstarVideoView extends TextureView {
   private static final String TAG = BigstarVideoView.class.getSimpleName();
 
+  public interface OnPositionChangedListener {
+    void onPositionChanged(int position);
+  }
+
+  public interface OnReleaseListener {
+    void onReleased();
+  }
+
   private MediaPlayer player;
   private MediaPlayerListenerContainer listenerContainer;
   private Uri uri;
@@ -26,6 +34,9 @@ public class BigstarVideoView extends TextureView {
 
   private int width;
   private int height;
+
+  private OnPositionChangedListener onPositionChangedListener;
+  private OnReleaseListener onReleaseListener;
 
   public BigstarVideoView(Context context) {
     this(context, null);
@@ -91,7 +102,9 @@ public class BigstarVideoView extends TextureView {
 
       @Override
       public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        // TODO seekbar update in here
+        if (onPositionChangedListener  != null) {
+          onPositionChangedListener.onPositionChanged(getCurrentPosition());
+        }
 
         if (listener != null) {
           listener.onSurfaceTextureUpdated(surface);
@@ -244,8 +257,15 @@ public class BigstarVideoView extends TextureView {
     player = null;
     uri = null;
     startImmediately = false;
+
+    if (onReleaseListener != null) {
+      onReleaseListener.onReleased();
+    }
   }
 
+  /**
+   * @return player released or not.
+   */
   public boolean isReleased() {
     return player == null;
   }
@@ -257,9 +277,41 @@ public class BigstarVideoView extends TextureView {
     return player != null && uri != null && player.isPlaying();
   }
 
+  /**
+   * @return current position of media player
+   */
+  public int getCurrentPosition() {
+    return player == null ? 0 : player.getCurrentPosition();
+  }
+
+  /**
+   * @return duration of media player
+   */
+  public int getDuration() {
+    return player == null ? 0 : player.getDuration();
+  }
+
+  /**
+   * seek to position
+   * @param msec : micro seconds.
+   */
+  public void seekTo(int msec) {
+    if (player == null) {
+      throw new IllegalStateException("BigstarVideoView is released. Set video uri again.");
+    }
+
+    player.seekTo(msec);
+  }
+
   public void setOnPreparedListener(MediaPlayer.OnPreparedListener listener) {
     if (listenerContainer != null) {
       listenerContainer.setOnPreparedListener(listener);
+    }
+  }
+
+  public void setOnCompletionListener(MediaPlayer.OnCompletionListener listener) {
+    if (listenerContainer != null) {
+      listenerContainer.setOnCompletionListener(listener);
     }
   }
 
@@ -287,10 +339,30 @@ public class BigstarVideoView extends TextureView {
     }
   }
 
-  private class MediaPlayerListenerContainer implements MediaPlayer.OnPreparedListener, MediaPlayer.OnBufferingUpdateListener,
-      MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnInfoListener {
+  /**
+   * It works only video screen is alive state.
+   *
+   * @param listener
+   */
+  public void setOnPositionChangedListener(OnPositionChangedListener listener) {
+    this.onPositionChangedListener = listener;
+  }
+
+  /**
+   * When player released, it works.
+   * @param listener
+   */
+  public void setOnReleaseListener(OnReleaseListener listener) {
+    this.onReleaseListener = listener;
+  }
+
+
+  private class MediaPlayerListenerContainer implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener,
+      MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnErrorListener,
+      MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnInfoListener {
 
     private MediaPlayer.OnPreparedListener preparedListener;
+    private MediaPlayer.OnCompletionListener completionListener;
     private MediaPlayer.OnBufferingUpdateListener bufferingUpdateListener;
     private MediaPlayer.OnErrorListener errorListener;
     private MediaPlayer.OnSeekCompleteListener seekCompleteListener;
@@ -299,6 +371,10 @@ public class BigstarVideoView extends TextureView {
 
     public void setOnPreparedListener(MediaPlayer.OnPreparedListener listener) {
       this.preparedListener = listener;
+    }
+
+    public void setOnCompletionListener(MediaPlayer.OnCompletionListener listener) {
+      this.completionListener = listener;
     }
 
     public void setOnBufferingUpdateListener(MediaPlayer.OnBufferingUpdateListener listener) {
@@ -331,6 +407,14 @@ public class BigstarVideoView extends TextureView {
       if (preparedListener != null) {
         preparedListener.onPrepared(mp);
       }
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+
+     if (completionListener != null) {
+       completionListener.onCompletion(mp);
+     }
     }
 
     @Override
@@ -381,3 +465,4 @@ public class BigstarVideoView extends TextureView {
   }
 
 }
+

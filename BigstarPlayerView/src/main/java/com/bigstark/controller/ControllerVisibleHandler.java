@@ -7,13 +7,15 @@ import android.view.View;
 import android.view.animation.AnimationUtils;
 
 class ControllerVisibleHandler extends Handler {
+  private static final int SHOW_DURATION = 4000;
+
   private Context context;
   private View layoutVideoController;
   private int currentMsg = 0;
 
-  public ControllerVisibleHandler(Context context, View layoutVideoController) {
-    this.context = context;
+  public ControllerVisibleHandler(View layoutVideoController) {
     this.layoutVideoController = layoutVideoController;
+    this.context = layoutVideoController.getContext();
   }
 
   @Override
@@ -42,7 +44,6 @@ class ControllerVisibleHandler extends Handler {
     }
     if (hasAnimation && !isVisibleController()) {
       layoutVideoController.startAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in));
-    } else {
     }
     layoutVideoController.setVisibility(View.VISIBLE);
 
@@ -53,7 +54,7 @@ class ControllerVisibleHandler extends Handler {
     currentMsg = (int) System.currentTimeMillis();
     Message msg = obtainMessage();
     msg.what = currentMsg;
-    sendMessageDelayed(msg, 4000);
+    sendMessageDelayed(msg, SHOW_DURATION);
   }
 
   public void hideController() {
@@ -62,10 +63,6 @@ class ControllerVisibleHandler extends Handler {
   }
 
   public boolean isVisibleController() {
-    if (layoutVideoController == null) {
-      return false;
-    }
-
-    return layoutVideoController.getVisibility() == View.VISIBLE ? true : false;
+    return layoutVideoController != null && layoutVideoController.getVisibility() == View.VISIBLE;
   }
 }
