@@ -5,8 +5,19 @@ It helps you play video more comfortable, pretty and useful.
 
 ##Include your project
 add build.gradle
-
-`compile 'com.github.daekyu.bigstarplayerview:library:0.1.0-SNAPSHOT@aar'`
+```
+allprojects {
+	repositories {
+		...
+		maven { url "https://jitpack.io" }
+	}
+}
+```
+```
+dependencies {
+        compile 'com.github.bigstark:bigstarplayerview:1.1'
+}
+```
 
 
 
