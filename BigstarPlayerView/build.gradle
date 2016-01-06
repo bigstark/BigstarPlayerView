@@ -14,5 +14,7 @@ android {
     }
 }
 
-dependencies {}
+dependencies {
+    compile 'com.github.bigstark:BigstarVideoView:0.1'
+}
 
