@@ -7,11 +7,11 @@ import android.content.res.TypedArray;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -21,40 +21,40 @@ import com.bigstark.video.ErrorReason;
 import com.bigstark.video.OnPlayStateChangedListener;
 import com.bigstark.video.OnPlaybackEventListener;
 
-public class BigstarPlayerView extends FrameLayout {
+/**
+ * Created by bigstark on 16. 1. 7..
+ */
+public class BigstarPlayerView extends RelativeLayout {
+    private static final String TAG = BigstarPlayerView.class.getSimpleName();
 
-    private float VIDEO_RATIO = 0;
+    private static final String FORMAT_TIME = "%d:%02d";
 
-    private int SCREEN_WIDTH;
-    private int SCREEN_HEIGHT;
-    private int VIDEO_HEIGHT_PORTRAIT;
-    private int LAYOUT_HEIGHT = 0;
+    private final float SCREEN_RATIO;
 
-    private Activity activity;
-
-    private int toFullScreenIcon = R.drawable.icon_player_full_screen;
-    private int toBaseScreenIcon = R.drawable.icon_player_basic_screen;
-    private int playIcon = R.drawable.ic_play_circle;
-    private int pauseIcon = R.drawable.ic_pause_circle;
-    private int seekBarProgressDrawable = R.drawable.seekbar_progress;
-    private int seekBarThumb = R.drawable.seekbar_thumb;
-    private int currentPositionColor = 0xFFFFFFFF;
-    private int durationColor = 0xFFFFFFFF;
-
-    private RelativeLayout layoutVideo;
     private BigstarVideoView videoView;
+    private float ratioVideo;
+    private float ratioScreenToVideo;
 
-    private View layoutVideoController;
-    private ImageView ivPlayPause;
+    private View layoutVideo;
+    private View layoutController;
+
+
+    private ImageButton btnPlayPause;
+    private ImageButton btnFullscreen;
     private TextView tvCurrentPosition;
     private TextView tvDuration;
-    private ImageView ivFullscreen;
     private SeekBar seekBar;
 
-    private ControllerVisibleHandler controllerVisibleHandler;
+    private int icPlay = R.drawable.ic_play;
+    private int icPause = R.drawable.ic_pause;
+    private int icFullscreenSwitch = R.drawable.ic_fullscreen_switch;
+    private int icFullscreenCancel = R.drawable.ic_fullscreen_cancel;
+    private int seekbarProgress = R.drawable.seekbar_progress;
+    private int seekbarThumb = R.drawable.seekbar_thumb;
 
-    private boolean isFullScreen = false;
-    private Uri videoUri;
+
+    private boolean isFull = false;
+
 
     public BigstarPlayerView(Context context) {
         this(context, null);
@@ -64,311 +64,300 @@ public class BigstarPlayerView extends FrameLayout {
         this(context, attrs, 0);
     }
 
-    public BigstarPlayerView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.bigstar_player_view, this);
+    public BigstarPlayerView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
 
-        final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.BigstarPlayerView, defStyle, 0);
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
+        SCREEN_RATIO = (float) screenWidth / screenHeight;
 
-        toFullScreenIcon = ta.getResourceId(R.styleable.BigstarPlayerView_toFullScreenIcon, toFullScreenIcon);
-        toBaseScreenIcon = ta.getResourceId(R.styleable.BigstarPlayerView_toBaseScreenIcon, toBaseScreenIcon);
-        playIcon = ta.getResourceId(R.styleable.BigstarPlayerView_playIcon, playIcon);
-        pauseIcon = ta.getResourceId(R.styleable.BigstarPlayerView_pauseIcon, pauseIcon);
-        seekBarProgressDrawable = ta.getResourceId(R.styleable.BigstarPlayerView_seekBarProgressDrawable, seekBarProgressDrawable);
-        seekBarThumb = ta.getResourceId(R.styleable.BigstarPlayerView_seekBarThumb, seekBarThumb);
-        currentPositionColor = ta.getColor(R.styleable.BigstarPlayerView_currentPositionColor, currentPositionColor);
-        durationColor = ta.getColor(R.styleable.BigstarPlayerView_durationColor, durationColor);
+        initResources(context, attrs, defStyleAttr);
+        initViews(context);
+    }
+
+
+    // init image resources.
+    private void initResources(Context context, AttributeSet attrs, int defStyleAttr) {
+        if (attrs == null) {
+            return;
+        }
+
+        final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.BigstarPlayerView, defStyleAttr, 0);
+
+        icFullscreenSwitch = ta.getResourceId(R.styleable.BigstarPlayerView_toFullScreenIcon, icFullscreenSwitch);
+        icFullscreenCancel = ta.getResourceId(R.styleable.BigstarPlayerView_toBaseScreenIcon, icFullscreenCancel);
+        icPlay = ta.getResourceId(R.styleable.BigstarPlayerView_playIcon, icPlay);
+        icPause = ta.getResourceId(R.styleable.BigstarPlayerView_pauseIcon, icPause);
+        seekbarProgress = ta.getResourceId(R.styleable.BigstarPlayerView_seekBarProgressDrawable, seekbarProgress);
+        seekbarThumb = ta.getResourceId(R.styleable.BigstarPlayerView_seekBarThumb, seekbarThumb);
 
         ta.recycle();
-
-        init();
-        initVideo();
-        initHandlers();
     }
 
-    public void initialize(Activity activity) {
-        this.activity = activity;
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    // init views, listener and set listener on view.
+    private void initViews(Context context) {
+        LayoutInflater.from(context).inflate(R.layout.bigstar_player_view, this);
 
-        SCREEN_WIDTH = metrics.widthPixels;
-        SCREEN_HEIGHT = metrics.heightPixels;
-    }
-
-    private void init() {
-        layoutVideoController = findViewById(R.id.layout_controller);
-        ivPlayPause = (ImageView) findViewById(R.id.iv_play_pause);
-        tvCurrentPosition = (TextView) findViewById(R.id.tv_current_position);
-        tvDuration = (TextView) findViewById(R.id.tv_duration);
-        ivFullscreen = (ImageView) findViewById(R.id.iv_fullscreen);
-        seekBar = (SeekBar) findViewById(R.id.seek_bar_video);
-
-        ivPlayPause.setImageResource(playIcon);
-        setCurrentPositionColor(currentPositionColor);
-        setDurationColor(durationColor);
-        ivFullscreen.setImageResource(toFullScreenIcon);
-        setSeekBarProgressDrawable(seekBarProgressDrawable);
-        setSeekBarThumb(seekBarThumb);
-
-        ivPlayPause.setOnClickListener(mPlayPauseClickListener);
-        ivFullscreen.setOnClickListener(mFullscreenClickListener);
-        seekBar.setOnSeekBarChangeListener(mSeekChangeLinstener);
-    }
-
-    private void initHandlers() {
-        controllerVisibleHandler = new ControllerVisibleHandler(layoutVideoController);
-    }
-
-    private void initVideo() {
-        layoutVideo = (RelativeLayout) findViewById(R.id.layout_video);
         videoView = (BigstarVideoView) findViewById(R.id.bvv_video);
 
-        layoutVideo.setOnClickListener(mLayoutClickListener);
-        videoView.setOnPlayStateChangedListener(playStateChangedListener);
-        videoView.setOnPlaybackEventListener(playbackEventListener);
+        layoutVideo = findViewById(R.id.layout_video);
+        layoutController = findViewById(R.id.layout_controller);
+
+        btnPlayPause = (ImageButton) findViewById(R.id.btn_play_pause);
+        btnFullscreen = (ImageButton) findViewById(R.id.btn_fullscreen);
+        tvCurrentPosition = (TextView) findViewById(R.id.tv_current_position);
+        tvDuration = (TextView) findViewById(R.id.tv_duration);
+        seekBar = (SeekBar) findViewById(R.id.sb_video);
+
+        videoView.setOnPlaybackEventListener(new PlaybackEventListenerImpl());
+        videoView.setOnPlayStateChangedListener(new PlayStateChangedListenerImpl());
+
+        ComponentClicListenerImpl componentClicListener = new ComponentClicListenerImpl();
+        layoutVideo.setOnClickListener(componentClicListener);
+        btnPlayPause.setOnClickListener(componentClicListener);
+        btnFullscreen.setOnClickListener(componentClicListener);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBarChangedListenerImpl());
     }
 
+
     /**
-     * Start video play
+     * Set video uri.
+     *
+     * @param uri
+     */
+    public void setVideoURI(Uri uri) {
+        setVideoURI(uri, false);
+    }
+
+
+    /**
+     * Set video uri.
+     *
+     * @param uri
+     * @param startImmediately
+     */
+    public void setVideoURI(Uri uri, boolean startImmediately) {
+        videoView.setVideoURI(uri, startImmediately);
+    }
+
+
+    /**
+     * Start video.
      */
     public void start() {
         videoView.start();
-        ivPlayPause.setImageResource(pauseIcon);
-        showController();
     }
 
+
     /**
-     * Video pause
+     * Pause video.
      */
     public void pause() {
         videoView.pause();
-        ivPlayPause.setImageResource(playIcon);
-        showController(false);
     }
 
+
     /**
-     * Seek Video position
+     * Stop video.
+     */
+    public void stop() {
+        videoView.stop();
+    }
+
+
+       /**
+     * Seek video position
      *
-     * @param second : not millisecond.
+     * @param msec
      */
-    public void seekTo(int second) {
-        videoView.seekTo(second);
-
-        showController();
+    public void seekTo(int msec) {
+        videoView.seekTo(msec);
     }
 
     /**
-     * Show controller, and hide after 4 second
-     */
-    public void showController() {
-        showController(true);
-    }
-
-    /**
-     * Show controller
+     * Set Fullscreen
      *
-     * @param isHideLater : if false, don't hide controller
+     * @param isFull
      */
-    public void showController(boolean isHideLater) {
-        showController(true, isHideLater);
+    public void setFullscreen(boolean isFull) {
+
+        if (!(getContext() instanceof Activity)) {
+            Log.d(TAG, "Set Fullscreen function need a activity context. If context is not activity, this function is not working.");
+            return;
+        }
+
+        Activity activity = (Activity) getContext();
+        if (activity.isFinishing()) {
+            Log.e(TAG, "Activity is finishing. It wasn't work.");
+            return;
+        }
+
+        this.isFull = isFull;
+        btnFullscreen.setImageResource(isFull ? icFullscreenCancel : icFullscreenSwitch);
+
+        activity.setRequestedOrientation(isFull ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutVideo.getLayoutParams();
+        if (params == null) {
+            params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            layoutVideo.setLayoutParams(params);
+        }
+
+        params.height = isFull ? ViewGroup.LayoutParams.MATCH_PARENT : Math.round(ratioScreenToVideo * videoView.getVideoHeight());
+
+        layoutVideo.requestLayout();
+    }
+
+
+    /**
+     * @return current state is full screen.
+     */
+    public boolean isFullscreen() {
+        return isFull;
+    }
+
+
+    /**
+     * @return VideoView is playing or not.
+     */
+    public boolean isPlaying() {
+        return videoView.isPlaying();
+    }
+
+
+    /**
+     * @return Duration of video.
+     */
+    public int getDuration() {
+        return videoView.getDuration();
+    }
+
+
+    /**
+     * @return Current Position of video.
+     */
+    public int getCurrentPosition() {
+        return videoView.getCurrentPosition();
     }
 
     /**
-     * Show controller
-     *
-     * @param hasAnimation : if true, animate. else, don't animate
-     * @param isHideLater  : if false, don't hide controller
+     * @return Video is released or not.
      */
-    public void showController(boolean hasAnimation, boolean isHideLater) {
-        controllerVisibleHandler.showController(hasAnimation, isHideLater);
+    public boolean isReleased() {
+        return videoView.isReleased();
     }
+
 
     /**
-     * Hide controller
+     * @return Video's width
      */
-    public void hideController() {
-        controllerVisibleHandler.hideController();
+    public int getVideoWidth() {
+        return videoView.getVideoWidth();
     }
 
-    private OnClickListener mLayoutClickListener = new OnClickListener() {
 
-        @Override
-        public void onClick(View v) {
-            if (videoView == null) {
-                initVideo();
-
-                if (videoUri != null) {
-                    setVideoURI(videoUri);
-                }
-            }
-
-            if (controllerVisibleHandler.isVisibleController()) {
-                hideController();
-            } else {
-                showController();
-            }
-        }
-    };
-
-    private OnClickListener mPlayPauseClickListener = new OnClickListener() {
-
-        @Override
-        public void onClick(View v) {
-            if (videoView == null) {
-                initVideo();
-
-                if (videoUri != null) {
-                    setVideoURI(videoUri);
-                }
-            }
-
-            if (videoView.isPlaying()) {
-                videoView.pause();
-                ivPlayPause.setImageResource(playIcon);
-                showController(false);
-            } else {
-                if (videoView.getCurrentPosition() == videoView.getDuration()) {
-                    videoView.seekTo(0);
-                }
-
-                videoView.start();
-                ivPlayPause.setImageResource(pauseIcon);
-                showController();
-            }
-        }
-    };
-
-    private OnClickListener mFullscreenClickListener = new OnClickListener() {
-
-        @Override
-        public void onClick(View v) {
-            if (videoView == null) {
-                initVideo();
-
-                if (videoUri != null) {
-                    setVideoURI(videoUri);
-                }
-            }
-
-            setFullScreen(!isFullScreen);
-        }
-
-    };
-
-    private void doLayout(final boolean isFullScreen) {
-        this.isFullScreen = isFullScreen;
-        boolean isPlaying = videoView.isPlaying();
-        videoView.pause();
-        activity.setRequestedOrientation(isFullScreen ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
-
-        if (isFullScreen) {
-            activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
-            params.height = SCREEN_WIDTH;
-            ivFullscreen.setImageResource(toBaseScreenIcon);
-        } else {
-            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            params.width = SCREEN_WIDTH;
-            if (LAYOUT_HEIGHT != 0) {
-                params.height = LAYOUT_HEIGHT;
-            } else {
-                params.height = VIDEO_HEIGHT_PORTRAIT;
-            }
-            ivFullscreen.setImageResource(toFullScreenIcon);
-        }
-        layoutVideo.setLayoutParams(params);
-        if (isPlaying) {
-            videoView.start();
-        }
+    /**
+     * @return Video's height
+     */
+    public int getVideoHeight() {
+        return videoView.getVideoHeight();
     }
 
-    private SeekBar.OnSeekBarChangeListener mSeekChangeLinstener = new SeekBar.OnSeekBarChangeListener() {
 
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            showController(false, false);
-        }
+    private OnPlayStateChangedListener onPlayStateChangedListener;
+    private OnPlaybackEventListener onPlaybackEventListener;
 
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            showController(false, true);
-        }
 
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if (!fromUser) {
-                return;
-            }
+    private void setOnPlayStateChangedListener(OnPlayStateChangedListener listener) {
+        this.onPlayStateChangedListener = listener;
+    }
 
-            if (videoView == null) {
-                initVideo();
-                if (videoUri != null) {
-                    setVideoURI(videoUri);
-                }
-            }
 
-            videoView.seekTo(progress * 1000);
-        }
-    };
+    private void setOnPlaybackEventListener(OnPlaybackEventListener listener) {
+        this.onPlaybackEventListener = listener;
+    }
 
-    private OnPlayStateChangedListener playStateChangedListener = new OnPlayStateChangedListener() {
+
+    private class PlayStateChangedListenerImpl implements OnPlayStateChangedListener {
+
         @Override
         public void onPrepared() {
-            int videoWidth = 1;
-            int videoHeight = 1;
-            VIDEO_RATIO = ((float) ((float) videoHeight) / ((float) videoWidth));
-            VIDEO_HEIGHT_PORTRAIT = (int) (((float) SCREEN_WIDTH) * VIDEO_RATIO);
+            int videoWidth = videoView.getVideoWidth();
+            int videoHeight = videoView.getVideoHeight();
 
-            int duration = 3000;
+            ratioVideo = (float) videoWidth / videoHeight;
+            ratioScreenToVideo = ratioVideo / SCREEN_RATIO;
+
+            int duration = videoView.getDuration() / 1000;
 
             int minute = duration / 60;
             int second = duration - (minute * 60);
 
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("%d", minute) + ":");
-            sb.append(String.format("%02d", second));
-
-            tvDuration.setText("" + sb.toString());
-
+            tvDuration.setText(String.format(FORMAT_TIME, minute, second));
             seekBar.setMax(duration);
-            doLayout(isFullScreen);
+
+            setFullscreen(false);
+
+            // TODO show controller
+
+            if (onPlayStateChangedListener != null) {
+                onPlayStateChangedListener.onPrepared();
+            }
         }
 
         @Override
         public void onError(ErrorReason errorReason) {
-
+            if (onPlayStateChangedListener != null) {
+                onPlayStateChangedListener.onError(errorReason);
+            }
         }
 
         @Override
         public void onCompletion() {
-            videoView.pause();
-            ivPlayPause.setImageResource(playIcon);
-            controllerVisibleHandler.showController(false);
+            pause();
+
+            if (onPlayStateChangedListener != null) {
+                onPlayStateChangedListener.onCompletion();
+            }
         }
 
         @Override
         public void onReleased() {
-
+            if (onPlayStateChangedListener != null) {
+                onPlayStateChangedListener.onReleased();
+            }
         }
-    };
+    }
 
-    private OnPlaybackEventListener playbackEventListener = new OnPlaybackEventListener() {
+
+    private class PlaybackEventListenerImpl implements OnPlaybackEventListener {
         @Override
         public void onPlaying() {
+            btnPlayPause.setImageResource(icPause);
 
+            if (onPlaybackEventListener != null) {
+                onPlaybackEventListener.onPlaying();
+            }
         }
 
         @Override
         public void onPaused() {
+            btnPlayPause.setImageResource(icPlay);
 
+            if (onPlaybackEventListener != null) {
+                onPlaybackEventListener.onPaused();
+            }
         }
 
         @Override
         public void onStopped() {
+            btnPlayPause.setImageResource(icPlay);
 
+            if (onPlaybackEventListener != null) {
+                onPlaybackEventListener.onStopped();
+            }
         }
 
         @Override
@@ -378,145 +367,67 @@ public class BigstarPlayerView extends FrameLayout {
             int minute = currentPosition / 60;
             int second = currentPosition - (minute * 60);
 
-            tvCurrentPosition.setText(String.format("%d:%02d", minute, second));
+            tvCurrentPosition.setText(String.format(FORMAT_TIME, minute, second));
             seekBar.setProgress(currentPosition);
+
+            if (onPlaybackEventListener != null) {
+                onPlaybackEventListener.onPositionChanged(position);
+            }
         }
 
         @Override
         public void onBufferingUpdate(int percent) {
-
+            if (onPlaybackEventListener != null) {
+                onPlaybackEventListener.onBufferingUpdate(percent);
+            }
         }
 
         @Override
         public void onSeekComplete() {
-
+            if (onPlaybackEventListener != null) {
+                onPlaybackEventListener.onSeekComplete();
+            }
         }
-    };
-
-    /**
-     * @return it returns video whole times. it's not millisecond
-     */
-    public int getDuration() {
-        return videoView.getDuration();
     }
 
-    /**
-     * @return it returns video current time. it's not millisecond
-     */
-    public int getCurrentPosition() {
-        return videoView.getCurrentPosition();
+
+    private class ComponentClicListenerImpl implements OnClickListener {
+        @Override
+        public void onClick(View v) {
+
+            if (v.getId() == R.id.btn_play_pause) {
+                if (isPlaying()) {
+                    pause();
+                } else {
+                    start();
+                }
+            } else if (v.getId() == R.id.layout_video) {
+                // TODO show or hide controller
+            } else if (v.getId() == R.id.btn_fullscreen) {
+                setFullscreen(!isFull);
+            }
+        }
     }
 
-    /**
-     * Set video uri.
-     *
-     * @param uri : Video uri can be file, streaming etc...
-     */
-    public void setVideoURI(Uri uri) {
-        this.videoUri = uri;
 
-        if (videoView == null) {
-            initVideo();
+    private class SeekBarChangedListenerImpl implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (!fromUser) {
+                return;
+            }
+
+            seekTo(progress * 1000);
         }
 
-        videoView.setVideoURI(uri);
-    }
-
-    /**
-     * @return it returns video ratio. ratio means height / width.
-     */
-    public float getVideoRatio() {
-        return VIDEO_RATIO;
-    }
-
-    /**
-     * setFullScreen
-     *
-     * @param isFullScreen
-     */
-    public void setFullScreen(boolean isFullScreen) {
-        doLayout(isFullScreen);
-//    if (fullScreenListener != null) {
-//      fullScreenListener.onFullScreen(isFullScreen);
-//    }
-    }
-
-    public boolean isPlaying() {
-        if (videoView == null) {
-            return false;
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            // TODO show controller
         }
-        return videoView.isPlaying();
-    }
 
-    protected ImageView getPlayPauseView() {
-        return ivPlayPause;
-    }
-
-    protected TextView getCurrentPositionView() {
-        return tvCurrentPosition;
-    }
-
-    protected TextView getDurationView() {
-        return tvDuration;
-    }
-
-    protected ImageView getFullscreenView() {
-        return ivFullscreen;
-    }
-
-    protected SeekBar getSeekBar() {
-        return seekBar;
-    }
-
-    public void setToFullScreenIcon(int resId) {
-        toFullScreenIcon = resId;
-    }
-
-    public void setToBaseScreenIcon(int resId) {
-        toBaseScreenIcon = resId;
-    }
-
-    public void setPlayIcon(int resId) {
-        playIcon = resId;
-    }
-
-    public void setPauseIcon(int resId) {
-        pauseIcon = resId;
-    }
-
-    public void setSeekBarProgressDrawable(int resId) {
-        seekBarProgressDrawable = resId;
-        seekBar.setProgressDrawable(getResources().getDrawable(resId));
-    }
-
-    public void setSeekBarThumb(int resId) {
-        seekBarThumb = resId;
-        seekBar.setThumb(getResources().getDrawable(resId));
-    }
-
-    public void setCurrentPositionColorResource(int colorResId) {
-        setCurrentPositionColor(getResources().getColor(colorResId));
-    }
-
-    public void setCurrentPositionColor(int color) {
-        currentPositionColor = color;
-        tvCurrentPosition.setTextColor(color);
-    }
-
-    public void setDurationColorResource(int colorResId) {
-        setDurationColor(getResources().getColor(colorResId));
-    }
-
-    public void setDurationColor(int color) {
-        durationColor = color;
-        tvDuration.setTextColor(color);
-    }
-
-    public void setVideoHeight(int height) {
-        LAYOUT_HEIGHT = height;
-
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutVideo.getLayoutParams();
-        params.height = height;
-        layoutVideo.setLayoutParams(params);
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            // TODO show controller
+        }
     }
 }
