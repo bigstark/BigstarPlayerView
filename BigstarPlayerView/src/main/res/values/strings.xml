@@ -1,5 +1,6 @@
 <resources>
 
-  <string name="app_name">BigstarPlayerView</string>
+    <string name="app_name">BigstarPlayerView</string>
 
+    <string name="default_time">0:00</string>
 </resources>
