@@ -15,7 +15,7 @@ android {
 }
 
 dependencies {
-    compile 'com.github.bigstark:BigstarVideoView:0.3'
+    compile 'com.github.bigstark:bigstarvideoview:0.4'
     compile 'com.android.support:appcompat-v7:23.1.1'
 }
 
