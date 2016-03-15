@@ -45,6 +45,9 @@ public class BigstarPlayerView extends RelativeLayout {
     private View layoutController;
 
 
+    private ControllerVisibleHandler visibleHandler;
+
+
     private ImageButton btnPlayPause;
     private ImageButton btnFullscreen;
     private TextView tvCurrentPosition;
@@ -80,6 +83,7 @@ public class BigstarPlayerView extends RelativeLayout {
 
         initResources(context, attrs, defStyleAttr);
         initViews(context);
+        initVisibleHandler();
     }
 
 
@@ -127,6 +131,13 @@ public class BigstarPlayerView extends RelativeLayout {
 
         seekBar.setOnSeekBarChangeListener(new SeekBarChangedListenerImpl());
     }
+
+
+    // init visible handler,
+    private void initVisibleHandler() {
+        visibleHandler = new ControllerVisibleHandler(layoutController);
+    }
+
 
 
     @Override
@@ -226,6 +237,7 @@ public class BigstarPlayerView extends RelativeLayout {
 
 
     private void scaleVideo() {
+        // TODO scale video
     }
 
 
@@ -320,7 +332,7 @@ public class BigstarPlayerView extends RelativeLayout {
 
             setFullscreen(false);
 
-            // TODO show controller
+            visibleHandler.showController(true);
 
             if (onPlayStateChangedListener != null) {
                 onPlayStateChangedListener.onPrepared();
@@ -360,6 +372,8 @@ public class BigstarPlayerView extends RelativeLayout {
             if (onPlaybackEventListener != null) {
                 onPlaybackEventListener.onPlaying();
             }
+
+            visibleHandler.showController(true);
         }
 
         @Override
@@ -369,6 +383,8 @@ public class BigstarPlayerView extends RelativeLayout {
             if (onPlaybackEventListener != null) {
                 onPlaybackEventListener.onPaused();
             }
+
+            visibleHandler.showController(false);
         }
 
         @Override
@@ -378,6 +394,8 @@ public class BigstarPlayerView extends RelativeLayout {
             if (onPlaybackEventListener != null) {
                 onPlaybackEventListener.onStopped();
             }
+
+            visibleHandler.showController(false);
         }
 
         @Override
@@ -422,7 +440,12 @@ public class BigstarPlayerView extends RelativeLayout {
                     start();
                 }
             } else if (v.getId() == R.id.layout_video) {
-                // TODO show or hide controller
+                if (visibleHandler.isVisibleController()) {
+                    visibleHandler.hideController();
+                } else {
+                    visibleHandler.showController(true);
+                }
+
             } else if (v.getId() == R.id.btn_fullscreen) {
                 setFullscreen(!isFull);
             }
@@ -442,12 +465,12 @@ public class BigstarPlayerView extends RelativeLayout {
 
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
-            // TODO show controller
+            visibleHandler.showController(false);
         }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            // TODO show controller
+            visibleHandler.showController(true);
         }
     }
 }

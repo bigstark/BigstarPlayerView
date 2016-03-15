@@ -1,68 +1,67 @@
 package com.bigstark.controller;
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
 class ControllerVisibleHandler extends Handler {
-  private static final int SHOW_DURATION = 4000;
+    private static final int SHOW_DURATION = 4000;
 
-  private Context context;
-  private View layoutVideoController;
-  private int currentMsg = 0;
+    private int currentMsg = 0;
+    private View layoutController;
 
-  public ControllerVisibleHandler(View layoutVideoController) {
-    this.layoutVideoController = layoutVideoController;
-    this.context = layoutVideoController.getContext();
-  }
-
-  @Override
-  public void handleMessage(Message msg) {
-    super.handleMessage(msg);
-    if (!isVisibleController()) {
-      return;
+    public ControllerVisibleHandler(View layoutController) {
+        this.layoutController = layoutController;
     }
 
-    if (currentMsg != msg.what) {
-      return;
+    @Override
+    public void handleMessage(Message msg) {
+        super.handleMessage(msg);
+        if (!isVisibleController()) {
+            return;
+        }
+
+        if (currentMsg != msg.what) {
+            return;
+        }
+
+        hideController();
     }
 
-    hideController();
-  }
-
-  public void showController(boolean isHideLater) {
-    showController(true, isHideLater);
-  }
-
-  public void showController(boolean hasAnimation, boolean isHideLater) {
-    try {
-      removeMessages(currentMsg);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    if (hasAnimation && !isVisibleController()) {
-      layoutVideoController.startAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in));
-    }
-    layoutVideoController.setVisibility(View.VISIBLE);
-
-    if (!isHideLater) {
-      return;
+    public void showController(boolean isHideLater) {
+        showController(true, isHideLater);
     }
 
-    currentMsg = (int) System.currentTimeMillis();
-    Message msg = obtainMessage();
-    msg.what = currentMsg;
-    sendMessageDelayed(msg, SHOW_DURATION);
-  }
+    public void showController(boolean hasAnimation, boolean isHideLater) {
+        try {
+            removeMessages(currentMsg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (hasAnimation && !isVisibleController()) {
+            Animation fadeIn = AnimationUtils.loadAnimation(layoutController.getContext(), android.R.anim.fade_in);
+            layoutController.startAnimation(fadeIn);
+        }
+        layoutController.setVisibility(View.VISIBLE);
 
-  public void hideController() {
-    layoutVideoController.startAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_out));
-    layoutVideoController.setVisibility(View.GONE);
-  }
+        if (!isHideLater) {
+            return;
+        }
 
-  public boolean isVisibleController() {
-    return layoutVideoController != null && layoutVideoController.getVisibility() == View.VISIBLE;
-  }
+        Message msg = obtainMessage();
+        msg.what = ++currentMsg;
+        sendMessageDelayed(msg, SHOW_DURATION);
+    }
+
+    public void hideController() {
+        Animation fadeOut = AnimationUtils.loadAnimation(layoutController.getContext(), android.R.anim.fade_out);
+        layoutController.startAnimation(fadeOut);
+        layoutController.setVisibility(View.GONE);
+    }
+
+    public boolean isVisibleController() {
+        return layoutController != null && layoutController.getVisibility() == View.VISIBLE;
+    }
 }
