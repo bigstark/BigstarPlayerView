@@ -29,11 +29,17 @@ public class BigstarPlayerView extends RelativeLayout {
 
     private static final String FORMAT_TIME = "%d:%02d";
 
+    private final int SCREEN_WIDTH;
+    private final int SCREEN_HEIGHT;
     private final float SCREEN_RATIO;
+
 
     private BigstarVideoView videoView;
     private float ratioVideo;
     private float ratioScreenToVideo;
+    private int layoutVideoWidth;
+    private int layoutVideoHeight;
+
 
     private View layoutVideo;
     private View layoutController;
@@ -68,9 +74,9 @@ public class BigstarPlayerView extends RelativeLayout {
         super(context, attrs, defStyleAttr);
 
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
-        SCREEN_RATIO = (float) screenWidth / screenHeight;
+        SCREEN_WIDTH = metrics.widthPixels;
+        SCREEN_HEIGHT = metrics.heightPixels;
+        SCREEN_RATIO = (float) SCREEN_WIDTH / SCREEN_HEIGHT;
 
         initResources(context, attrs, defStyleAttr);
         initViews(context);
@@ -114,14 +120,21 @@ public class BigstarPlayerView extends RelativeLayout {
         videoView.setOnPlaybackEventListener(new PlaybackEventListenerImpl());
         videoView.setOnPlayStateChangedListener(new PlayStateChangedListenerImpl());
 
-        ComponentClicListenerImpl componentClicListener = new ComponentClicListenerImpl();
-        layoutVideo.setOnClickListener(componentClicListener);
-        btnPlayPause.setOnClickListener(componentClicListener);
-        btnFullscreen.setOnClickListener(componentClicListener);
+        ComponentClickListenerImpl componentClickListener = new ComponentClickListenerImpl();
+        layoutVideo.setOnClickListener(componentClickListener);
+        btnPlayPause.setOnClickListener(componentClickListener);
+        btnFullscreen.setOnClickListener(componentClickListener);
 
         seekBar.setOnSeekBarChangeListener(new SeekBarChangedListenerImpl());
     }
 
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        Log.v(TAG, "layoutVideoWidth : " + layoutVideo.getWidth());
+        Log.v(TAG, "layoutVideoHeight : " + layoutVideo.getHeight());
+    }
 
     /**
      * Set video uri.
@@ -205,9 +218,14 @@ public class BigstarPlayerView extends RelativeLayout {
             layoutVideo.setLayoutParams(params);
         }
 
-        params.height = isFull ? ViewGroup.LayoutParams.MATCH_PARENT : Math.round(ratioScreenToVideo * videoView.getVideoHeight());
-
+        params.height = isFull ? ViewGroup.LayoutParams.MATCH_PARENT : Math.round(ratioScreenToVideo * SCREEN_HEIGHT);
         layoutVideo.requestLayout();
+
+        scaleVideo();
+    }
+
+
+    private void scaleVideo() {
     }
 
 
@@ -270,12 +288,12 @@ public class BigstarPlayerView extends RelativeLayout {
     private OnPlaybackEventListener onPlaybackEventListener;
 
 
-    private void setOnPlayStateChangedListener(OnPlayStateChangedListener listener) {
+    public void setOnPlayStateChangedListener(OnPlayStateChangedListener listener) {
         this.onPlayStateChangedListener = listener;
     }
 
 
-    private void setOnPlaybackEventListener(OnPlaybackEventListener listener) {
+    public void setOnPlaybackEventListener(OnPlaybackEventListener listener) {
         this.onPlaybackEventListener = listener;
     }
 
@@ -287,8 +305,10 @@ public class BigstarPlayerView extends RelativeLayout {
             int videoWidth = videoView.getVideoWidth();
             int videoHeight = videoView.getVideoHeight();
 
+            Log.v(TAG, String.format("video width : %d, video height : %d", videoWidth, videoHeight));
+
             ratioVideo = (float) videoWidth / videoHeight;
-            ratioScreenToVideo = ratioVideo / SCREEN_RATIO;
+            ratioScreenToVideo = SCREEN_RATIO / ratioVideo;
 
             int duration = videoView.getDuration() / 1000;
 
@@ -391,7 +411,7 @@ public class BigstarPlayerView extends RelativeLayout {
     }
 
 
-    private class ComponentClicListenerImpl implements OnClickListener {
+    private class ComponentClickListenerImpl implements OnClickListener {
         @Override
         public void onClick(View v) {
 
