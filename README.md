@@ -15,7 +15,7 @@ allprojects {
 ```
 ```
 dependencies {
-        compile 'com.github.bigstark:bigstarplayerview:1.1'
+        compile 'com.github.bigstark:BigstarPlayerView:1.2'
 }
 ```
 
