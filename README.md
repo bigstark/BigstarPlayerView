@@ -57,18 +57,14 @@ For FullScreen, you must add `android:configChanges="keyboard|keyboardHidden|ori
 ###Java
 After `BigstarPlayerView bpvMain = (BigstarPlayerView) findViewById(R.id.bpv_video)`
 
-You must intialize like this.
 
-``bpvMain.initialize(activity)``
+you must set `bpvMain.setVideoURI(uri, startImmediately)` before `bpvMain.start()`
 
-you must set `bpvMain.setVideoURI(uri)` before `bpvMain.start()`
-
-if you want to seek to specific position, you can use `bpvMain.seekTo(second)`
+if you want to seek to specific position, you can use `bpvMain.seekTo(msec)`
 also you can stop video as `bpvMain.pause()`
 
-if you want to fix video height, you can use `bpvMain.setVideoHeight(height)`
-
-if you want to kwow video ratio, you can use `bpvMain.getVideoRatio()`
+It have to support this.
+[] Support scale video.
 
 
 License
