@@ -63,9 +63,6 @@ you must set `bpvMain.setVideoURI(uri, startImmediately)` before `bpvMain.start(
 if you want to seek to specific position, you can use `bpvMain.seekTo(msec)`
 also you can stop video as `bpvMain.pause()`
 
-It have to support this.
-[] Support scale video.
-
 
 License
 -------
